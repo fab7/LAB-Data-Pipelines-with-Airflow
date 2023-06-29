@@ -46,12 +46,12 @@ def demonstrate_custom_operators():
     )
 
     copy_trips_task = S3ToRedshiftOperator(
-        task_id="load_trips_from_s3_to_redshift",
-        table="trips",
-        redshift_conn_id="redshift",
-        aws_credentials_id="aws_credentials",
-        s3_bucket="sean-murdock",
-        s3_key="data-pipelines/divvy/unpartitioned/divvy_trips_2018.csv"
+        task_id             = "load_trips_from_s3_to_redshift",
+        table               = "trips",
+        redshift_conn_id    = "redshift",
+        aws_credentials_id  =  "aws_credentials",
+        s3_bucket           = "sean-murdock",
+        s3_key              = "data-pipelines/divvy/unpartitioned/divvy_trips_2018.csv"
     )
 
     #

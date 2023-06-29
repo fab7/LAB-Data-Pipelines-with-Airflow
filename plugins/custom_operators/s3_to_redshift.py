@@ -28,12 +28,12 @@ class S3ToRedshiftOperator(BaseOperator):
                  *args, **kwargs):
 
         super(S3ToRedshiftOperator, self).__init__(*args, **kwargs)
-        self.table = table
-        self.redshift_conn_id = redshift_conn_id
-        self.s3_bucket = s3_bucket
-        self.s3_key = s3_key
-        self.delimiter = delimiter
-        self.ignore_headers = ignore_headers
+        self.table              = table
+        self.redshift_conn_id   = redshift_conn_id
+        self.s3_bucket          = s3_bucket
+        self.s3_key             = s3_key
+        self.delimiter          = delimiter
+        self.ignore_headers     = ignore_headers
         self.aws_credentials_id = aws_credentials_id
 
     def execute(self, context):

@@ -3,7 +3,7 @@ from airflow.models import BaseOperator
 from airflow.utils.decorators import apply_defaults
 
 class StageToRedshiftOperator(BaseOperator):
-    ui_color = '#358140'
+    ui_color =  '#000000'  # '#358140'
 
     @apply_defaults
     def __init__(self,

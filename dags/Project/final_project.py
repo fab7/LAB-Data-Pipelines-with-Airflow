@@ -13,12 +13,15 @@ from udacity.common import final_project_sql_statements
 default_args = {
     'owner': 'udacity',
     'start_date': pendulum.now(),
+    # TODO - Retries,
+    # TODO - Retry_delay
+    # TODO - Catchup   
 }
 
 @dag(
     default_args=default_args,
     description='Load and transform data in Redshift with Airflow',
-    schedule_interval='0 * * * *'
+    schedule_interval='0 * * * *' # TODO - Once an hour
 )
 def final_project():
 
@@ -29,11 +32,31 @@ def final_project():
 
     stage_events_to_redshift = StageToRedshiftOperator(
         task_id='Stage_events',
+        s3_bucket         = 'fab-se4s-bucket',
     )
+
+    # stage_events_to_redshift = StageToRedshiftOperator(
+    #     task_id           = 'Stage_events',
+    #     table             = 'staging_events',
+    #     redshift_conn_id  = 'redshift',
+    #     aws_conn_id       = 'aws_credentials',
+    #     s3_bucket         = 'fab-se4s-bucket',
+    #     s3_key            = 'log_data/2018/11/2018-11-01-events.json'
+    #     )
 
     stage_songs_to_redshift = StageToRedshiftOperator(
         task_id='Stage_songs',
+        s3_bucket         = 'fab-se4s-bucket',
     )
+
+    # stage_songs_to_redshift = StageToRedshiftOperator(
+    #     task_id           = 'Stage_songs',
+    #     table             = 'staging_songs',
+    #     redshift_conn_id  = 'redshift',
+    #     aws_conn_id       = 'aws_credentials',
+    #     s3_bucket         = 'fab-se4s-bucket',
+    #     s3_key            = 'song_data/A/A/A/TRAAAAK128F9318786.json'
+    #     )
 
     load_songplays_table = LoadFactOperator(
         task_id='Load_songplays_fact_table',
