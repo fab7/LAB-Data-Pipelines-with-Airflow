@@ -64,18 +64,18 @@ def demonstrate_custom_operators():
     )
     
     create_stations_table = PostgresOperator(
-        task_id="create_stations_table",
-        postgres_conn_id="redshift",
-        sql=sql_statements.CREATE_STATIONS_TABLE_SQL,
+        task_id          = "create_stations_table",
+        postgres_conn_id = "redshift",
+        sql              = sql_statements.CREATE_STATIONS_TABLE_SQL,
     )
 
     copy_stations_task = S3ToRedshiftOperator(
-        task_id="load_stations_from_s3_to_redshift",
-        redshift_conn_id="redshift",
-        aws_credentials_id="aws_credentials",
-        s3_bucket="sean-murdock",
-        s3_key="data-pipelines/divvy/unpartitioned/divvy_stations_2017.csv",
-        table="stations"
+        task_id            = "load_stations_from_s3_to_redshift",
+        redshift_conn_id   = "redshift",
+        aws_credentials_id = "aws_credentials",
+        s3_bucket          = "sean-murdock",
+        s3_key             = "data-pipelines/divvy/unpartitioned/divvy_stations_2017.csv",
+        table              = "stations"
     )
 
     #
