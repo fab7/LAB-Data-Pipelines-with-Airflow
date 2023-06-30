@@ -1,4 +1,5 @@
 class SqlQueries:
+    
     songplay_table_insert = ("""
         SELECT
                 md5(events.sessionid || events.start_time) songplay_id,
@@ -38,6 +39,8 @@ class SqlQueries:
     time_table_insert = ("""
         SELECT start_time, extract(hour from start_time), extract(day from start_time), extract(week from start_time), 
                extract(month from start_time), extract(year from start_time), extract(dayofweek from start_time)
-        FROM songplays
+        FROM songplay
     """)
+    
+    
     

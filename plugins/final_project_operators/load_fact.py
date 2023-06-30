@@ -53,3 +53,4 @@ class LoadFactOperator(BaseOperator):
         formatted_sql = "INSERT INTO {} {}".format(self.table, SqlQueries.songplay_table_insert)
         self.log.info(f"Running SQL: {formatted_sql}")
         redshift_hook.run(formatted_sql)
+        

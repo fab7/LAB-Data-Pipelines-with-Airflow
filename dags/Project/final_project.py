@@ -7,7 +7,8 @@ from final_project_operators.stage_redshift import StageToRedshiftOperator
 from final_project_operators.load_fact import LoadFactOperator
 from final_project_operators.load_dimension import LoadDimensionOperator
 from final_project_operators.data_quality import DataQualityOperator
-from plugins.helpers import final_project_sql_statements
+
+from helpers.final_project_sql_statements import SqlQueries
 
 
 default_args = {
@@ -37,7 +38,7 @@ def final_project():
         redshift_conn_id  = 'redshift',
         table             = 'staging_events',
         aws_conn_id       = 'aws_credentials',
-        s3_bucket         = 'fab-se4s-bucket',
+        s3_bucket         = 'fab-se4s-bucket',      # 'udacity-dend',
         s3_key            = 'log-data',
         year              = '2018',
         month             = '11'
@@ -48,28 +49,38 @@ def final_project():
         redshift_conn_id  = 'redshift',
         table             = 'staging_songs',
         aws_conn_id       = 'aws_credentials',
-        s3_bucket         = 'fab-se4s-bucket',
+        s3_bucket         = 'fab-se4s-bucket',      # 'udacity-dend',
         s3_key            = 'song-data'
         )
 
-    load_songplays_table = LoadFactOperator(
-        task_id='Load_songplays_fact_table',
-    )
+    load_songplay_table = LoadFactOperator(
+        task_id           = 'Load_songplay_fact_table',
+        redshift_conn_id  = 'redshift',
+        table             = 'songplay'
+        )
 
     load_user_dimension_table = LoadDimensionOperator(
-        task_id='Load_user_dim_table',
-    )
+        task_id           = 'Load_user_dim_table',
+        redshift_conn_id  = 'redshift',
+        table             = 'user'
+        )
 
     load_song_dimension_table = LoadDimensionOperator(
-        task_id='Load_song_dim_table',
-    )
+        task_id           = 'Load_song_dim_table',
+        redshift_conn_id  = 'redshift',
+        table             = 'song'
+        )
 
     load_artist_dimension_table = LoadDimensionOperator(
-        task_id='Load_artist_dim_table',
+        task_id           = 'Load_artist_dim_table',
+        redshift_conn_id  = 'redshift',
+        table             = 'artist'      
     )
 
     load_time_dimension_table = LoadDimensionOperator(
-        task_id='Load_time_dim_table',
+        task_id           = 'Load_time_dim_table',
+        redshift_conn_id  = 'redshift',
+        table             = 'time'
     )
 
     run_quality_checks = DataQualityOperator(
@@ -84,13 +95,13 @@ def final_project():
     start_operator >> stage_events_to_redshift
     start_operator >> stage_songs_to_redshift
 
-    stage_events_to_redshift >> load_songplays_table
-    stage_songs_to_redshift  >> load_songplays_table
+    stage_events_to_redshift >> load_songplay_table
+    stage_songs_to_redshift  >> load_songplay_table
 
-    load_songplays_table >> load_user_dimension_table
-    load_songplays_table >> load_song_dimension_table
-    load_songplays_table >> load_artist_dimension_table
-    load_songplays_table >> load_time_dimension_table
+    load_songplay_table >> load_user_dimension_table
+    load_songplay_table >> load_song_dimension_table
+    load_songplay_table >> load_artist_dimension_table
+    load_songplay_table >> load_time_dimension_table
 
     load_user_dimension_table   >> run_quality_checks
     load_song_dimension_table   >> run_quality_checks

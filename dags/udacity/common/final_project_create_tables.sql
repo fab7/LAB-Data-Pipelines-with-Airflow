@@ -65,7 +65,7 @@ CREATE TABLE public.songplay (
 CREATE TABLE public.artist (
 	artistid        varchar(256) NOT NULL,
 	name            varchar(256),
-	location        varchar(256),
+	location        varchar(300),         # (256) was too short !!!
 	lattitude       numeric(18,0),
 	longitude       numeric(18,0)
 );
@@ -78,8 +78,6 @@ CREATE TABLE public.song (
 	duration        numeric(18,0),
 	CONSTRAINT songs_pkey PRIMARY KEY (songid)
 );
-
-
 
 CREATE TABLE public."time" (
 	start_time      timestamp   NOT NULL,
