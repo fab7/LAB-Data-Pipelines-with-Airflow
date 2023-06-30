@@ -1,3 +1,4 @@
+from airflow.contrib.hooks.aws_hook import AwsHook
 from airflow.hooks.postgres_hook import PostgresHook
 from airflow.models import BaseOperator
 from airflow.utils.decorators import apply_defaults
@@ -5,8 +6,8 @@ from airflow.utils.decorators import apply_defaults
 class StageToRedshiftOperator(BaseOperator):
     """
     A class to load a JSON formatted file from S3 to Amazon Redshift.
-    This Airflow operator creates and runs a SQL COPY statement based on the
-     parameters provided. 
+    This operator uses a SQL COPY statement to dynamically stage the data
+    from S3 to Redshift.
 
     Attributes:
       task_id          (str) A unique, meaningful id for the task.
@@ -33,12 +34,9 @@ class StageToRedshiftOperator(BaseOperator):
     #  Note: Template fields are placeholders in the operator's parameters 
     #   that can be templated. Defining template fields makes this operators
     #   more flexible and reusable as these parameters aer dynamically set. 
-    
-    # FIXME - template_fields = ("s3_bucket", "s3_key", "table", )
-    template_fields = ("s3_bucket")
+    template_fields = ("s3_bucket", "s3_key", "table")
 
-    # This operator uses a SQL COPY statement to dynamically stage the data
-    # from S3 to Redshift. The copy task uses the provided template fields.
+    # Copy task to dynamically stage the data from S3 to Redshift.
     COPY_SQL = """
         COPY {}
         FROM '{}'
@@ -49,66 +47,67 @@ class StageToRedshiftOperator(BaseOperator):
      
     @apply_defaults
     def __init__(self,
-                 # Define your operators params (with defaults) here
-                 # Example:
-                 # redshift_conn_id=your-connection-name
+                 # Operator parameters
+                 redshift_conn_id="",
+                 table="",
+                 aws_conn_id="",
                  s3_bucket="",
+                 s3_key="",
+                 year="2018",
+                 month="01",
                  *args, **kwargs):
 
+        # Call the constructor of parent class and initialize it with inherited attributes
         super(StageToRedshiftOperator, self).__init__(*args, **kwargs)
-        # Map params here
-        # Example:
-        # self.conn_id = conn_id
-        self.s3_bucket          = s3_bucket
+        # Map inherited parameters
+        self.redshift_conn_id = redshift_conn_id
+        self.table            = table
+        self.aws_conn_id      = aws_conn_id
+        self.s3_bucket        = s3_bucket
+        self.s3_key           = s3_key
+        self.year             = year
+        self.month            = month
 
+      
     def execute(self, context):
-        self.log.info('<INFO> StageToRedshiftOperator starts here')
-        self.log.info(f"<INFO> This operator is going to copy the data TODO from the S3 bucket \'{self.s3_bucket}\' to the Redshift table \'TODO\'.") 
+      
+      self.log.info(f"--- [STEP-0] ------- STAGE-TO-REDSHIFT-OPERATOR STARTS HERE.\n\tThis operator is going to copy the data from \'s3://{self.s3_bucket}/{self.s3_key}\' to the Redshift table \'{self.table}\'.") 
+      aws_hook  = AwsHook(self.aws_conn_id)
+      aws_cred  = aws_hook.get_credentials()
+      redshift_hook  = PostgresHook(postgres_conn_id=self.redshift_conn_id)
+
+      # Check if table exists
+      # This query will return true if the table exists and false if it does not.
+      self.log.info(f"--- [STEP-1] ------- ASSESS THAT TABLE EXISTS IN REDSHIFT.")
+      result = redshift_hook.get_first("SELECT EXISTS ( SELECT 1 FROM pg_tables WHERE schemaname = 'public' AND tablename = '{}' )".format(self.table))
+      # Access the result
+      if result[0] :
+         self.log.info(f"The table \'{self.table}\' exists in Redshift.")
+      else: 
+        raise ValueError(f"[ERROR] The table \'{self.table}\' does not exist in Redshift (result[0]={result[0]}). Please create this table before running this DAG. FYI, you may use the Query-Editor of Redshift to create this table.")
+    
+      self.log.info("--- [STEP-2] ------- CLEARING DATA FROM DESTINATION REDSHIFT TABLE")
+      redshift_hook.run("DELETE FROM {}".format(self.table))
+
+      self.log.info("--- [STEP-3] ------- COPYING DATA FROM S3 TO REDSHIFT")
+
+      # Distinguish between the two types of JSON files to load.
+      #   'log-data/2018/11/2018-11-01-events.json'
+      #   'song-data/A/A/A/TRAAAAK128F9318786.json'
+      if self.s3_key == 'log-data':
+          s3_path = "s3://{}/{}/{}/{}/".format(self.s3_bucket, self.s3_key, self.year, self.month)
+          # FIXME s3_path = "s3://{}/{}/{}/{}/".format(self.s3_bucket, self.s3_key, self.year, self.month)
+      elif self.s3_key == 'song-data':
+          s3_path = "s3://{}/{}/A/A/A/".format(self.s3_bucket, self.s3_key)
+          # FIXME s3_path = "s3://{}/{}/".format(self.s3_bucket, self.s3_key) 
+      else:
+        raise ValueError(f"[ERROR] The S3 key \'{self.s3_key}\' does not match ['log-data'|'song-data']. Please use an appropriate \'s3_key\' when calling this operator.")
      
-
-    # @apply_defaults
-    # def __init__(self,
-    #              # Operator parameters
-    #              redshift_conn_id="redshift",
-    #              aws_credentials_id="aws_credentials",
-    #              table="",
-    #              s3_bucket="",
-    #              s3_key="",
-    #              #delimiter=",",
-    #              #ignore_headers=1,
-    #              *args, **kwargs):
-
-        # # Call constructor of parent class and initialize it with inherited attributes
-        # super(StageToRedshiftOperator, self).__init__(*args, **kwargs)
-        # # Map inherited parameters
-        # self.redshift_conn_id   = redshift_conn_id
-        # self.aws_credentials_id = aws_credentials_id
-        # self.table              = table
-        # self.s3_bucket          = s3_bucket
-        # self.s3_key             = s3_key
-        # #self.delimiter          = delimiter
-        # #self.ignore_headers     = ignore_headers
-        
-
-    # def execute(self, context):
-    #     #OBSOLETE self.log.info('StageToRedshiftOperator not implemented yet')
-    #     aws_hook    = AwsHook(self.aws_credentials_id)
-    #     credentials = aws_hook.get_credentials()
-    #     redshift    = PostgresHook(postgres_conn_id=self.redshift_conn_id)
-
-    #     self.log.info("Clearing data from destination Redshift table")
-    #     redshift.run("DELETE FROM {}".format(self.table))
-
-    #     self.log.info("Copying data from S3 to Redshift")
-    #     rendered_key = self.s3_key.format(**context)
-    #     s3_path = "s3://{}/{}".format(self.s3_bucket, rendered_key)
-    #     formatted_sql = S3ToRedshiftOperator.COPY_SQL.format(
-    #         self.table,
-    #         s3_path,
-    #         credentials.access_key,
-    #         credentials.secret_key
-    #       #    self.ignore_headers,
-    #       #    self.delimiter
-    #       )
-    #     self.log.info(f"Running SQL: {formatted_sql}")
-    #     redshift.run(formatted_sql)
+      formatted_sql = StageToRedshiftOperator.COPY_SQL.format(
+                        self.table,
+                        s3_path,
+                        aws_cred.access_key,
+                        aws_cred.secret_key
+                      )
+      self.log.info(f"Running SQL: {formatted_sql}")
+      redshift_hook.run(formatted_sql)

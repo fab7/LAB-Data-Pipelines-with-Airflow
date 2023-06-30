@@ -15,12 +15,14 @@ default_args = {
     'start_date': pendulum.now(),
     # TODO - Retries,
     # TODO - Retry_delay
-    # TODO - Catchup   
+    # TODO - Catchup OFF  
 }
 
 @dag(
     default_args=default_args,
     description='Load and transform data in Redshift with Airflow',
+    #start_date=pendulum.datetime(2018, 1, 1, 0, 0, 0, 0),
+    #end_date=pendulum.datetime(2018, 2, 1, 0, 0, 0, 0),
     schedule_interval='0 * * * *' # TODO - Once an hour
 )
 def final_project():
@@ -29,34 +31,26 @@ def final_project():
     #== TASKS INVOCATION SECTION
     #===========================================
     start_operator = DummyOperator(task_id='Begin_execution')
-
+      
     stage_events_to_redshift = StageToRedshiftOperator(
-        task_id='Stage_events',
+        task_id           = 'Stage_events',
+        redshift_conn_id  = 'redshift',
+        table             = 'staging_events',
+        aws_conn_id       = 'aws_credentials',
         s3_bucket         = 'fab-se4s-bucket',
-    )
-
-    # stage_events_to_redshift = StageToRedshiftOperator(
-    #     task_id           = 'Stage_events',
-    #     table             = 'staging_events',
-    #     redshift_conn_id  = 'redshift',
-    #     aws_conn_id       = 'aws_credentials',
-    #     s3_bucket         = 'fab-se4s-bucket',
-    #     s3_key            = 'log_data/2018/11/2018-11-01-events.json'
-    #     )
+        s3_key            = 'log-data',
+        year              = '2018',
+        month             = '11'
+        )
 
     stage_songs_to_redshift = StageToRedshiftOperator(
-        task_id='Stage_songs',
+        task_id           = 'Stage_songs',
+        redshift_conn_id  = 'redshift',
+        table             = 'staging_songs',
+        aws_conn_id       = 'aws_credentials',
         s3_bucket         = 'fab-se4s-bucket',
-    )
-
-    # stage_songs_to_redshift = StageToRedshiftOperator(
-    #     task_id           = 'Stage_songs',
-    #     table             = 'staging_songs',
-    #     redshift_conn_id  = 'redshift',
-    #     aws_conn_id       = 'aws_credentials',
-    #     s3_bucket         = 'fab-se4s-bucket',
-    #     s3_key            = 'song_data/A/A/A/TRAAAAK128F9318786.json'
-    #     )
+        s3_key            = 'song-data'
+        )
 
     load_songplays_table = LoadFactOperator(
         task_id='Load_songplays_fact_table',
