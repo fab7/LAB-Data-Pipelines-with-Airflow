@@ -60,7 +60,7 @@ CREATE TABLE public.staging_songs (
 	artist_name     varchar(256),
 	artist_latitude numeric(18,0),
 	artist_longitude numeric(18,0),
-	artist_location varchar(256),
+	artist_location varchar(300),         # (256) was too short !!!
 	song_id         varchar(256),
 	title           varchar(256),
 	duration        numeric(18,0),

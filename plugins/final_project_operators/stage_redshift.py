@@ -11,21 +11,13 @@ class StageToRedshiftOperator(BaseOperator):
 
     Attributes:
       task_id          (str) A unique, meaningful id for the task.
-      table            (str) The name of the target table in Redshift.
       redshift_conn_id (str) The Airflow connection id for 'redshift'.
+      table            (str) The name of the target table in Redshift.      
       aws_conn_id      (str) The Airflow connection id for 'aws'.
       s3_bucket        (str) The name of the S3 bucket to read from.
       s3_key           (str) The path to the data on S3.
-
-    Templated fields:
-
-    TODO:
-      The operator's parameters should specify where in S3 the file is loaded
-        and what is the target table. The parameters should be used to 
-        distinguish between JSON file. 
-      Another important requirement of the stage operator is containing a 
-      templated field that allows it to load timestamped files from S3 based
-      on the execution time and run backfills.
+      year             (str) An optional year to load from.
+      month            (str) An optional month to load from.
     """
 
     ui_color = '#358140'
@@ -42,7 +34,7 @@ class StageToRedshiftOperator(BaseOperator):
         FROM '{}'
         ACCESS_KEY_ID '{}'
         SECRET_ACCESS_KEY '{}'
-        JSON 'auto'
+        JSON '{}'
       """
      
     @apply_defaults
@@ -97,9 +89,11 @@ class StageToRedshiftOperator(BaseOperator):
       if self.s3_key == 'log-data':
           s3_path = "s3://{}/{}/{}/{}/".format(self.s3_bucket, self.s3_key, self.year, self.month)
           # FIXME s3_path = "s3://{}/{}/{}/{}/".format(self.s3_bucket, self.s3_key, self.year, self.month)
+          log_json_path = "s3://{}/log_json_path.json".format(self.s3_bucket)
       elif self.s3_key == 'song-data':
-          s3_path = "s3://{}/{}/A/A/A/".format(self.s3_bucket, self.s3_key)
-          # FIXME s3_path = "s3://{}/{}/".format(self.s3_bucket, self.s3_key) 
+          s3_path = "s3://{}/{}/A/".format(self.s3_bucket, self.s3_key)
+          # FIXME s3_path = "s3://{}/{}/".format(self.s3_bucket, self.s3_key)
+          log_json_path = "auto" 
       else:
         raise ValueError(f"[ERROR] The S3 key \'{self.s3_key}\' does not match ['log-data'|'song-data']. Please use an appropriate \'s3_key\' when calling this operator.")
      
@@ -107,7 +101,8 @@ class StageToRedshiftOperator(BaseOperator):
                         self.table,
                         s3_path,
                         aws_cred.access_key,
-                        aws_cred.secret_key
+                        aws_cred.secret_key,
+                        log_json_path
                       )
       self.log.info(f"Running SQL: {formatted_sql}")
       redshift_hook.run(formatted_sql)
