@@ -84,8 +84,17 @@ def final_project():
     )
 
     run_quality_checks = DataQualityOperator(
-        task_id='Run_data_quality_checks',
-    )
+        task_id           = 'Run_data_quality_checks',
+        redshift_conn_id  = 'redshift',
+        dq_checks         = [
+                                { 'sql_test_case'  : 'SELECT COUNT(*) FROM public.songplay WHERE userid IS NULL', 
+                                  'expected_result': 0 },
+                                { 'sql_test_case'  : 'SELECT COUNT(DISTINCT "level") FROM public.songplay', 
+                                  'expected_result': 2 },
+                                { 'sql_test_case'  : 'SELECT COUNT(*) FROM public.user',
+                                  'expected_result': 42 },
+                            ]
+        )
 
     end_operator = DummyOperator(task_id='End_execution')
 
