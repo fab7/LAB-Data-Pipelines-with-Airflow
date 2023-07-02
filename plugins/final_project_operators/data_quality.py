@@ -56,6 +56,7 @@ class DataQualityOperator(BaseOperator):
         self.dq_checks        = dq_checks
 
     def execute(self, context):
+        default_args = self.dag.default_args
         self.log.info(f"--- [STEP-0] ------- DATA QUALITY CHECK OPERATOR STARTS HERE.\n\tThis operator is going to execute and measure some data quality tests on the dataset.") 
         redshift_hook  = PostgresHook(postgres_conn_id=self.redshift_conn_id)
 
@@ -64,11 +65,6 @@ class DataQualityOperator(BaseOperator):
             self.log.info(f"NOW RUNNING TC[{index}] --> \'{dq_check['sql_test_case']}\' --> EXPECTING RESULT --> \'{dq_check['expected_result']}\'")
             formatted_sql = "{}".format(dq_check['sql_test_case'])
             self.log.info(f"Running SQL: {formatted_sql}")
-
-            #result = redshift_hook.get_first(formatted_sql)
-            #if result[0] != dq_check['expected_result']:
-            #    self.log.info(f"[ERROR] TC[{index}] --> EXPECTED \'{dq_check['expected_result']}\' -- RECEIVED \'{result[0]}\' ")
-
             records = redshift_hook.get_records(formatted_sql)
             if len(records) < 1 or len(records[0]) < 1:
                 raise ValueError(f"DATA QUALITY CHECK FAILED: SQL check returned no results")

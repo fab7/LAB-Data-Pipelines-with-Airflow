@@ -12,19 +12,18 @@ from helpers.final_project_sql_statements import SqlQueries
 
 
 default_args = {
-    'owner': 'udacity',
-    'start_date': pendulum.now(),
-    # TODO - Retries,
-    # TODO - Retry_delay
-    # TODO - Catchup OFF  
+    'owner'         : 'Francois',
+    'start_date'    : pendulum.now(),
+    'retries'       : 2,
+    'retry_delay'   : timedelta(minutes=1),
+    'catchup'       : False,
+    'email_on_retry': False
 }
 
 @dag(
-    default_args=default_args,
-    description='Load and transform data in Redshift with Airflow',
-    #start_date=pendulum.datetime(2018, 1, 1, 0, 0, 0, 0),
-    #end_date=pendulum.datetime(2018, 2, 1, 0, 0, 0, 0),
-    schedule_interval='0 * * * *' # TODO - Once an hour
+    default_args      = default_args,
+    description       = 'Load and transform data in Redshift with Airflow',
+    schedule_interval = '@hourly'
 )
 def final_project():
 
@@ -91,9 +90,11 @@ def final_project():
                                   'expected_result': 0 },
                                 { 'sql_test_case'  : 'SELECT COUNT(DISTINCT "level") FROM public.songplay', 
                                   'expected_result': 2 },
-                                { 'sql_test_case'  : 'SELECT COUNT(*) FROM public.user',
-                                  'expected_result': 42 },
-                            ]
+                                # Uncoment the following 2 lines to generate a datal quality check error
+                                # { 'sql_test_case'  : 'SELECT COUNT(*) FROM public.user',
+                                #   'expected_result': 42 },
+                            ],
+        retries           = 3,  # Overrides the default retires value
         )
 
     end_operator = DummyOperator(task_id='End_execution')
