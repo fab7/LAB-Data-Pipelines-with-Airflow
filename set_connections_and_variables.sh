@@ -9,17 +9,17 @@
 # "description": "", 
 # "host": "", 
 # "schema": "", 
-# "login": "AKIA4QE4NTH3R7EBEANN", 
-# "password": "s73eJIJRbnqRtll0/YKxyVYgrDWXfoRpJCDkcG2m", 
+# "login": "<ADD-YOUR-KEY-HERE>", 
+# "password": "<ADD-YOUR-PASSWORD-HERE>", 
 # "port": null, 
 # "is_encrypted": "False", 
 # "is_extra_encrypted": "False", 
 # "extra_dejson": {}, 
-# "get_uri": "aws://AKIA4QE4NTH3R7EBEANN:s73eJIJRbnqRtll0%2FYKxyVYgrDWXfoRpJCDkcG2m@"
+# "get_uri": "aws://<ADD-YOUR-KEY-HERE>:<ADD-YOUR-PASSWORD-HERE>"
 #}]
 
 # SAVING the URI
-airflow connections add aws_credentials --conn-uri 'aws://AKIAXDFTHLKY7XPEPLGO:rPkCNT0pr%2FfaUcVUlsrUqTUfzU%2BZJgV8UP8tcmR2@'
+airflow connections add aws_credentials --conn-uri 'aws://<ADD-YOUR-KEY-HERE>:<ADD-YOUR-PASSWORD-HERE>'
 
 # HELPER: run the follwing command and observe the JSON output: 
 #   airflow connections get redshift -o json
